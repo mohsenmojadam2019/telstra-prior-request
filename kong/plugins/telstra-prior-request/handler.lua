@@ -1,4 +1,4 @@
--- Written by Dr. Raymond Zheng  in November 2018 
+-- Written by Dr. Xiaoming (Raymond) Zheng  in November 2018 
 -- for Notification to merge two  API Calls into one
 
 local BasePlugin = require "kong.plugins.base_plugin"
