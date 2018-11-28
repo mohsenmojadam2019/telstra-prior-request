@@ -32,7 +32,7 @@ Taking Telstra notification API for example, when an end user/agent calls the no
 -  Restart Kong daemon
 
 ## Variable Format:
-When configuring this plugin in Kong Admin Dashboard, variables from 4 sources( both headers and body of request of service-call and response of middle-call) can be used. 
+When configuring this plugin in Kong Admin Dashboard, variables from 4 sources( both headers and body of request of service-call and response of middle-call: req_headers, req_body, res_headers and res_body) can be used. 
 However the rules below apply:
 - Variables must follow the format '{{KEY:VALUE}}'(quotation marks here and below are not included).
 - The available 'KEY' are 'req_body', 'res_body', 'req_headers', and 'req_headers'.

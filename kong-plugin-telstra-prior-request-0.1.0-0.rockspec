@@ -20,7 +20,7 @@ dependencies = {
 }
 build = {
   type = "builtin",
-   modules = {
+  modules = {
     ["kong.plugins."..pluginName..".handler"] = "kong/plugins/"..pluginName.."/handler.lua",
     ["kong.plugins."..pluginName..".schema"] = "kong/plugins/"..pluginName.."/schema.lua",
   }

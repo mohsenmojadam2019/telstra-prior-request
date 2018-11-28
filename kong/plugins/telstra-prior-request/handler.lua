@@ -83,7 +83,7 @@ function TestFunction:access(config)
       httpc_headers[name]=value
     end
   end
-  local res, err = httpc:request_uri("https://allinone.non-prod.telstrahealth.com:8443/token", {
+  local res, err = httpc:request_uri(config.prereq.url, {
     method = config.prereq.http_method or "POST",
     ssl_verify = config.prereq.ssl_verify or false,
     headers = httpc_headers,
@@ -98,7 +98,7 @@ function TestFunction:access(config)
   res_json.res_body = cjson.decode(res.body)
 
   --LOGING
-  ngx.log(ngx.ERR, "RESPONCE_BODY: ", res.body)
+  --ngx.log(ngx.ERR, "RESPONCE_BODY: ", res.body)
 
   for _, name, value in iter(config.request.headers) do
     ngx.req.set_header(name, val(value, res_json))
