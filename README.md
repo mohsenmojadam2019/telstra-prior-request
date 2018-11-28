@@ -31,6 +31,17 @@ Taking Telstra notification API for example, when an end user/agent calls the no
 -  ```luarocks remove kong-plugin-telstra-prior-request```
 -  Restart Kong daemon
 
+## Parameter Explanation:
+- config.prereq.body: set the body for middle-call. String.
+- config.prereq.headers: set the headers for middle-call. Array of strings separated by ','.
+- config.prereq.http_method: HTTP methods, default to 'POST'. String.
+- config.prereq.ssl_verify: whether to check ssl. Boolean.
+- config.prereq.url: the url of middle-call. String, unencoded url.
+- config.request.body: overwrite the body of service-call. String.
+- config.request.headers: add headers to service-call. Array of strings separated by ','.
+- api_id, service_id, route_id and consumer_id are heritated from standard Kong plugin. Please refer to Kong Doc.
+
+
 ## Variable Format:
 When configuring this plugin in Kong Admin Dashboard, variables from 4 sources( both headers and body of request of service-call and response of middle-call: req_headers, req_body, res_headers and res_body) can be used. 
 However the rules below apply:
