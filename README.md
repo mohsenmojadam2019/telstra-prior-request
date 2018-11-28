@@ -15,7 +15,7 @@ Taking notification for example, when end users call the notification platform t
 - [Nginx](https://nginx.org/) >= 1.13.11
 
 ## Installation:
--  luarock install kong-plugin-telstra-prior-request-0.1.0-0.all.rock
+-  ```luarock install kong-plugin-telstra-prior-request-0.1.0-0.all.rock```
 -  Change 'custom_plugins' in Kong configration file
 -  Restart Kong daemon
 -  Log into Kong Admin Dashboard and click 'New Plugin' under plade 'Plugins'
@@ -25,7 +25,7 @@ Taking notification for example, when end users call the notification platform t
 ## Uninstallation:
 -  Remove all configuration of this plugin in Admin Dashboard
 -  Remove this plugin from 'custom_plugins' in Kong configration file
--  Remove packages of this plugin
+-  ```luarocks remove kong-plugin-telstra-prior-request```
 -  Restart Kong daemon
 
 ## Attenttion:
