@@ -32,13 +32,13 @@ Taking Telstra notification API for example, when an end user/agent calls the no
 -  Restart Kong daemon
 
 ## Parameter Explanation:
-- config.prereq.body: set the body for middle-call. String.
-- config.prereq.headers: set the headers for middle-call. Array of strings separated by ','.
-- config.prereq.http_method: HTTP methods, default to 'POST'. String.
-- config.prereq.ssl_verify: whether to check ssl. Boolean.
-- config.prereq.url: the url of middle-call. String, unencoded url.
-- config.request.body: overwrite the body of service-call. String.
-- config.request.headers: add headers to service-call. Array of strings separated by ','.
+- config.prereq.body: set the body for middle-call. (String)
+- config.prereq.headers: set the headers for middle-call. (Array of strings separated by ```,```)
+- config.prereq.http_method: HTTP methods, default to ```POST```. (String)
+- config.prereq.ssl_verify: whether to check ssl. (Boolean)
+- config.prereq.url: the url of middle-call. (String, unencoded url)
+- config.request.body: overwrite the body of service-call. (String)
+- config.request.headers: add headers to service-call. (Array of strings separated by ```,```)
 - api_id, service_id, route_id and consumer_id are heritated from standard Kong plugin. Please refer to Kong Doc.
 
 
