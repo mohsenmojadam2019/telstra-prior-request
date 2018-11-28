@@ -3,7 +3,7 @@ version = "1.0-1"
 local pluginName = package:match("^kong%-plugin%-(.+)$") --telstra-prior-request
 supported_platforms = {"linux"}
 source = {
-  url = "https://github.com/siaomingjeng/ozfriend.git"  -- TBC
+  url = "https://github.com/siaomingjeng/telstra-prior-request.git"  -- TBC
 }
 description = {
   summary = "An example for the LuaRocks tutorial.",
