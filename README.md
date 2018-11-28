@@ -1,5 +1,5 @@
 # Build for Kong Customized Plugin: Telstra Prior Request
-Written by Dr. Raymond Zheng in November 2018
+Written by Dr. Xiaoming (Raymond) Zheng in November 2018
 
 ## Functionality:
 This plugin can make an additional prior API call(named middle-call) when the configured service (named service-call) is called.
