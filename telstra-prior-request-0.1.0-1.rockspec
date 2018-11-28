@@ -1,5 +1,5 @@
-package = "telstra-prior-request"
-version = "1.0-1"
+package = "kong-plugin-telstra-prior-request"
+version = "0.1.0-1"
 local pluginName = package:match("^kong%-plugin%-(.+)$") --telstra-prior-request
 supported_platforms = {"linux"}
 source = {
@@ -12,7 +12,7 @@ description = {
     Here we would put a detailed, typically
     paragraph-long description.
   ]],
-  homepage = "http://...", -- We don't have one yet
+  homepage = "https://github.com/siaomingjeng", -- We don't have one yet
   license = "MIT/X11" 
 }
 dependencies = {
