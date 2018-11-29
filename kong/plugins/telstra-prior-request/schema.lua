@@ -28,7 +28,7 @@ return {
       type = "table",
       schema = {
         fields = {
-          url = {type = "string", required = true"},
+          url = {type = "string", required = true},
           http_method = {type = "string", default = "POST"},
           body = {type = "string"},
           headers = {type = "array", func = check_for_value},
