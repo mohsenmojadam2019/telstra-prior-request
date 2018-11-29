@@ -10,6 +10,7 @@ The service-call can accepts variables from both headers and body of the reponse
 Taking Telstra notification API for example, when an end user/agent calls the notification platform to send out a short message, this plugin will call the token server first, grab the returned asscess token from response and insert into the headers of the call to the notification. 
 
 ## Pre-requisites:
+- [unzip](https://linuxhint.com/centos_unzip/) >= 6.00
 - [Lua](https://www.lua.org/) >= 5.1
 - [LuaRocks](https://luarocks.org/) >=2.4.3
 - [Kong](https://konghq.com/) >= 0.33
