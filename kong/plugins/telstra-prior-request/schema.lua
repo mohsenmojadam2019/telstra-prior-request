@@ -28,10 +28,10 @@ return {
       type = "table",
       schema = {
         fields = {
-          url = {type = "string", required = true, default  = "https://allinone.non-prod.telstrahealth.com:8443/token"},
+          url = {type = "string", required = true"},
           http_method = {type = "string", default = "POST"},
-          body = {type = "string", default = "client_id=FQXrZSMiD4alV7clZfCKmSyG0QlHVpr8&grant_type=client_credentials&scope=NOTIFICATION-MGMT&client_secret=2K6HYyi70BjUEyTY"},
-          headers = {type = "array", default = "Content-Type:application/x-www-form-urlencoded", func = check_for_value},
+          body = {type = "string"},
+          headers = {type = "array", func = check_for_value},
           ssl_verify = {type = "boolean", default = false}
         }
       }
@@ -41,7 +41,7 @@ return {
       schema = {
         fields = {
           body = {type = "string"},
-          headers = {type = "array", default = "Authorization:Bearer {{res_body:access_token}},Content-Type:application/json", func = check_for_value}
+          headers = {type = "array", func = check_for_value}
         }
       }
     }
