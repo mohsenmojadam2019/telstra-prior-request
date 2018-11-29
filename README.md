@@ -52,6 +52,7 @@ However the rules below apply:
 - 'VALUE' is case-sensitive when 'KEY' is 'req_body' or 'res_body'.
 - 'req_body' is only available when 'content-type:application/json' is in 'req_headers'.
 - 'req_body' and 'res_body' must be json-formatted string and only one level variables can be used.
+- 'req_body' and 'req_headers' are only available for middel-call.
 - 'res_body' and 'res_headers' are only available for service-call.
 
 ## Attenttion:
