@@ -2,9 +2,10 @@
 Written by Dr. Xiaoming (Raymond) Zheng in November 2018
 
 ## Functionality:
-This plugin can make an additional prior API call(named middle-call) when the configured service (named service-call) is called.
-The middle-call can accepts variables from both headers and body of service-call.
-The service-call can accepts variables from both headers and body of the reponse of middle-call.
+This plugin can make an additional prior API call(named prior-call) when the configured service (named service-call) is called.
+The prior-call can accepts variables from both headers and body of service-call.
+The service-call can accepts variables from both headers and body of the reponse of prior-call.
+The tested running time is around 0.24 milliseconds, while one notify API call takes 1123.4 milliseconds.
 
 ## Use Case:
 Taking Telstra notification API for example, when an end user/agent calls the notification platform to send out a short message, this plugin will call the token server first, grab the returned asscess token from response and insert into the headers of the call to the notification. 
@@ -33,18 +34,18 @@ Taking Telstra notification API for example, when an end user/agent calls the no
 -  Restart Kong daemon
 
 ## Parameter Explanation:
-- config.prereq.body: set the body for middle-call. (String)
-- config.prereq.headers: set the headers for middle-call. (Array of strings separated by ```,```)
+- config.prereq.body: set the body for prior-call. (String)
+- config.prereq.headers: set the headers for prior-call. (Array of strings separated by ```,```)
 - config.prereq.http_method: HTTP methods, default to ```POST```. (String)
 - config.prereq.ssl_verify: whether to check ssl. (Boolean)
-- config.prereq.url: the url of middle-call. (String, unencoded url)
+- config.prereq.url: the url of prior-call. (String, unencoded url)
 - config.request.body: overwrite the body of service-call. (String)
 - config.request.headers: add headers to service-call. (Array of strings separated by ```,```)
 - api_id, service_id, route_id and consumer_id are heritated from standard Kong plugin. Please refer to Kong Doc.
 
 
 ## Variable Format:
-When configuring this plugin in Kong Admin Dashboard, variables from 4 sources( both headers and body of request of service-call and response of middle-call: req_headers, req_body, res_headers and res_body) can be used. 
+When configuring this plugin in Kong Admin Dashboard, variables from 4 sources( both headers and body of request of service-call and response of prior-call: req_headers, req_body, res_headers and res_body) can be used. 
 However the rules below apply:
 - Variables must follow the format '{{KEY:VALUE}}'(quotation marks here and below are not included).
 - The available 'KEY' are 'req_body', 'res_body', 'req_headers', and 'req_headers'.

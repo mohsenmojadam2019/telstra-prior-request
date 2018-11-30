@@ -1,6 +1,9 @@
 local find = string.find
 -- entries must have colons to set the key and value apart
 local function check_for_value(value)
+  if not value then
+    return true
+  end
   for i, entry in ipairs(value) do
     local ok = find(entry, ":")
     if not ok then
@@ -29,9 +32,9 @@ return {
       schema = {
         fields = {
           url = {type = "string", required = true},
-          http_method = {type = "string", default = "POST"},
+          http_method = {type = "string", default = "POST", func = check_method},
           body = {type = "string"},
-          headers = {type = "array", func = check_for_value},
+          headers = {type = "array", default = {}, func = check_for_value},
           ssl_verify = {type = "boolean", default = false}
         }
       }
@@ -41,7 +44,7 @@ return {
       schema = {
         fields = {
           body = {type = "string"},
-          headers = {type = "array", func = check_for_value}
+          headers = {type = "array", default = {}, func = check_for_value}
         }
       }
     }

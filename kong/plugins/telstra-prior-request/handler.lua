@@ -1,18 +1,25 @@
 -- Written by Dr. Xiaoming (Raymond) Zheng  in November 2018 
--- for Notification to merge two  API Calls into one
+-- Instert another call a header of the service call
+-- Able to use variables from headers and body.
 
 local BasePlugin = require "kong.plugins.base_plugin"
-local TestFunction = BasePlugin:extend()
-local cjson = require "cjson"
+local PriorReqFunction = BasePlugin:extend()
 
 
-function TestFunction:new()
-  TestFunction.super.new(self, "Telstra Prior Request")
+function PriorReqFunction:new()
+  PriorReqFunction.super.new(self, "Telstra Prior Request")
 end
 
 
-function TestFunction:access(config)
-  TestFunction.super.access(self)
+function PriorReqFunction:access(config)
+  PriorReqFunction.super.access(self)
+
+  local cjson = require "cjson"
+  local http = require "resty.http"
+  local httpc = http.new()
+  local httpc_headers = {}
+  local res_json = {}
+  local req_json = {}
 
   local function iter(config_array)
     return function(config_array, i)
@@ -31,6 +38,9 @@ function TestFunction:access(config)
 
   local function val(value_str, source_json)
     -- replace {{value}} with the value from source_json
+    if not source_json then
+      return value_str
+    end
     local val_return = value_str
     for item in value_str:gmatch("{{(.-)}}") do
       local key, value = item:match("^([^:]+):*(.-)$")
@@ -43,10 +53,11 @@ function TestFunction:access(config)
   end
   
   -- Grab headers from request
-  local req_json={} err=nil
-  req_json.req_headers, err = ngx.req.get_headers()
+  local req_headers, err = ngx.req.get_headers()
   if err then
     ngx.log(ngx.ERR, "Req Headers Read ERR: ", err)
+  else
+    req_json.req_headers = req_headers
   end
 
   -- Grab body from request if specified in Application/Json
@@ -74,31 +85,37 @@ function TestFunction:access(config)
     config.prereq.body = val(config.prereq.body, req_json)
   end
 
-  -- Call Prior Server
-  local http = require "resty.http"
-  local httpc = http.new()
-  local httpc_headers = {}
-  for _, name, value in iter(config.prereq.headers) do
-    if name then
-      httpc_headers[name]=value
+  -- Make a prior cal if not calling self
+  local req_url = config.prereq.url:match('^https?://([^?&=]+)/?') or ""
+  local req_host = req_url:match('[^:?&=/]+') or ""
+  local req_path = req_url:match('(/.-)/?$') or "/"
+  local ngx_path = ngx.var.uri:match('(/.-)/?$') or "/"
+  if req_host:lower() == ngx.var.host:lower() and req_path == ngx_path then
+    -- Avoid self-call
+    ngx.log(ngx.ERR, "CIRCLE: The prior API calls itself. ", config.prereq.url, " vs ", ngx.var.host, ngx.var.uri)
+  else
+    -- Call Prior Server
+    for _, name, value in iter(config.prereq.headers) do
+      if name then
+        httpc_headers[name] = value
+      end
     end
+    local res, err = httpc:request_uri(config.prereq.url, {
+      method = config.prereq.http_method or "POST",
+      ssl_verify = config.prereq.ssl_verify or false,
+      headers = httpc_headers,
+      body = config.prereq.body or ""
+    })
+    if err then
+      ngx.log(ngx.ERR, "ERR: ", err, res.body)
+    else
+      res_json.res_headers = res.headers
+      res_json.res_body = cjson.decode(res.body)
+    end
+  
+    --LOGING
+    --ngx.log(ngx.ERR, "RESPONCE_BODY: ", res.body)
   end
-  local res, err = httpc:request_uri(config.prereq.url, {
-    method = config.prereq.http_method or "POST",
-    ssl_verify = config.prereq.ssl_verify or false,
-    headers = httpc_headers,
-    body = config.prereq.body or ""
-  })
-  if err then
-    ngx.log(ngx.ERR, "ERR: ", err, res.body)
-  end
-
-  local res_json = {}
-  res_json.res_headers = res.headers
-  res_json.res_body = cjson.decode(res.body)
-
-  --LOGING
-  --ngx.log(ngx.ERR, "RESPONCE_BODY: ", res.body)
 
   for _, name, value in iter(config.request.headers) do
     ngx.req.set_header(name, val(value, res_json))
@@ -109,8 +126,8 @@ function TestFunction:access(config)
 end
 
 
-TestFunction.PRIORITY = 999
-TestFunction.VERSION = "0.1.0"
+PriorReqFunction.PRIORITY = 999
+PriorReqFunction.VERSION = "0.1.0"
 
 
-return TestFunction
+return PriorReqFunction
