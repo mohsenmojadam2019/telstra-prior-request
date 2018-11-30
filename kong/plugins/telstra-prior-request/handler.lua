@@ -85,7 +85,7 @@ function PriorReqFunction:access(config)
     config.prereq.body = val(config.prereq.body, req_json)
   end
 
-  -- Make a prior cal if not calling self
+  -- Make a prior call if not calling self
   local req_url = config.prereq.url:match('^https?://([^?&=]+)/?') or ""
   local req_host = req_url:match('[^:?&=/]+') or ""
   local req_path = req_url:match('(/.-)/?$') or "/"
