@@ -86,35 +86,37 @@ function PriorReqFunction:access(config)
   end
 
   -- Make a prior call if not calling self
-  local req_url = config.prereq.url:match('^https?://([^?&=]+)/?') or ""
-  local req_host = req_url:match('[^:?&=/]+') or ""
-  local req_path = req_url:match('(/.-)/?$') or "/"
-  local ngx_path = ngx.var.uri:match('(/.-)/?$') or "/"
-  if req_host:lower() == ngx.var.host:lower() and req_path == ngx_path then
-    -- Avoid self-call
-    ngx.log(ngx.ERR, "CIRCLE: The prior API calls itself. ", config.prereq.url, " vs ", ngx.var.host, ngx.var.uri)
-  else
-    -- Call Prior Server
-    for _, name, value in iter(config.prereq.headers) do
-      if name then
-        httpc_headers[name] = value
-      end
-    end
-    local res, err = httpc:request_uri(config.prereq.url, {
-      method = config.prereq.http_method or "POST",
-      ssl_verify = config.prereq.ssl_verify or false,
-      headers = httpc_headers,
-      body = config.prereq.body or ""
-    })
-    if err then
-      ngx.log(ngx.ERR, "ERR: ", err, res.body)
+  if config.prereq.url and #config.prereq.url > 9 then
+    local req_url = config.prereq.url:match('^https?://([^?&=]+)/?') or ""
+    local req_host = req_url:match('[^:?&=/]+') or ""
+    local req_path = req_url:match('(/.-)/?$') or "/"
+    local ngx_path = ngx.var.uri:match('(/.-)/?$') or "/"
+    if req_host:lower() == ngx.var.host:lower() and req_path == ngx_path then
+      -- Avoid self-call
+      ngx.log(ngx.ERR, "CIRCLE: The prior API calls itself. ", config.prereq.url, " vs ", ngx.var.host, ngx.var.uri)
     else
-      res_json.res_headers = res.headers
-      res_json.res_body = cjson.decode(res.body)
+      -- Call Prior Server
+      for _, name, value in iter(config.prereq.headers) do
+        if name then
+          httpc_headers[name] = value
+        end
+      end
+      local res, err = httpc:request_uri(config.prereq.url, {
+        method = config.prereq.http_method or "POST",
+        ssl_verify = config.prereq.ssl_verify or false,
+        headers = httpc_headers,
+        body = config.prereq.body or ""
+      })
+      if err then
+        ngx.log(ngx.ERR, "ERR: ", err, res.body)
+      else
+        res_json.res_headers = res.headers
+        res_json.res_body = cjson.decode(res.body)
+      end
+    
+      --LOGING
+      --ngx.log(ngx.ERR, "RESPONCE_BODY: ", res.body)
     end
-  
-    --LOGING
-    --ngx.log(ngx.ERR, "RESPONCE_BODY: ", res.body)
   end
 
   for _, name, value in iter(config.request.headers) do
