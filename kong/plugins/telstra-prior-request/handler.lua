@@ -15,11 +15,9 @@ function PriorReqFunction:access(config)
   PriorReqFunction.super.access(self)
 
   local cjson = require "cjson"
-  local http = require "resty.http"
-  local httpc = http.new()
-  local httpc_headers = {}
-  local res_json = {}
-  local req_json = {}
+  local httpc = require "resty.http"
+  local url = require "socket.url"
+  local data_json = {}
 
   local function iter(config_array)
     return function(config_array, i)
@@ -36,8 +34,8 @@ function PriorReqFunction:access(config)
     end, config_array, 0
   end
 
-  local function val(value_str, source_json)
-    -- replace {{value}} with the value from source_json
+  local function val(value_str, source_json, urlencode)
+    -- Replace {{value}} with the value from source_json.
     if not source_json then
       return value_str
     end
@@ -46,72 +44,100 @@ function PriorReqFunction:access(config)
       local key, value = item:match("^([^:]+):*(.-)$")
       if key and value and source_json[key] and source_json[key][value] then
         item=item:gsub('-','%%-')
-        val_return = val_return:gsub("{{"..item.."}}",source_json[key][value])
+        if urlencode then
+          local encoded_value, _ = source_json[key][value]:gsub("([^%w%-%.%_%~])", function(c) return string.format("%%%%%02X", string.byte(c)) end)
+          val_return = val_return:gsub("{{"..item.."}}", encoded_value)
+        else
+          val_return = val_return:gsub("{{"..item.."}}", source_json[key][value])
+        end
       end
     end
     return val_return
   end
   
-  -- Grab headers from request
+  -- Grab Headers from Request
   local req_headers, err = ngx.req.get_headers()
   if err then
     ngx.log(ngx.ERR, "Req Headers Read ERR: ", err)
   else
-    req_json.req_headers = req_headers
+    data_json.req_headers = req_headers
   end
-
-  -- Grab body from request if specified in Application/Json
+  -- Grab Query from Rrequest
+  local req_query, err = ngx.req.get_uri_args()
+  if err then
+    ngx.log(ngx.ERR, "Req Query Parameter Read ERR: ", err)
+  else
+    data_json.req_query = req_query
+  end
+  -- Grab Json Body from Request if specified in Application/Json
   ngx.req.read_body()
   local req_body = ngx.req.get_body_data()
-  if req_json.req_headers['content-type'] and req_json.req_headers['content-type']:lower() == 'application/json' then
+  if data_json.req_headers['content-type'] and data_json.req_headers['content-type']:lower() == 'application/json' then
     local status, req_body_json = pcall(cjson.decode, req_body)
     if status then
-      req_json.req_body = req_body_json
+      data_json.req_body = req_body_json
     else
-      ngx.log(ngx.ERR, "The user input body:", req_body, " cannot be turned to json!")
-      req_json.req_body = {}
+      ngx.log(ngx.ERR, "The user input request body:", req_body, " cannot be turned to json!")
+      data_json.req_body = {}
     end
   end
 
-  -- Replace header variables
-  for name, value in ipairs(config.prereq.headers) do
-    if (value:match('{{.*:.*}}')) then
-      config.prereq.headers[name] = val(value, req_json)
-    end
-  end
-  
-  -- Replace body variables
-  if config.prereq.body and config.prereq.body:match('{{.*:.*}}') then
-    config.prereq.body = val(config.prereq.body, req_json)
-  end
-
-  -- Make a prior call if not calling self
-  if config.prereq.url and #config.prereq.url > 9 then
-    local req_url = config.prereq.url:match('^https?://([^?&=]+)/?') or ""
-    local req_host = req_url:match('[^:?&=/]+') or ""
-    local req_path = req_url:match('(/.-)/?$') or "/"
+  -- Make a prior call if not calling itself
+  if config.prereq.url then
+    local req_url_parse = url.parse(config.prereq.url)
+    --req_url_parse.port = req_url_parse.port or (req_url_parse.scheme == "http" and "80") or (req_url_parse.scheme == "https" and "443")
+    local req_path = req_url_parse.path or "/"
     local ngx_path = ngx.var.uri:match('(/.-)/?$') or "/"
-    if req_host:lower() == ngx.var.host:lower() and req_path == ngx_path then
-      -- Avoid self-call
+    if req_url_parse.host:lower() == ngx.var.host:lower() and req_path == ngx_path then
+      -- Avoid Self-Call: same host and same path are treated as self call. Will match port in future.
       ngx.log(ngx.ERR, "CIRCLE: The prior API calls itself. ", config.prereq.url, " vs ", ngx.var.host, ngx.var.uri)
     else
-      -- Call Prior Server
-      for _, name, value in iter(config.prereq.headers) do
-        if name then
-          httpc_headers[name] = value
+      local httpc_headers = {}
+      local httpc_query = {}
+      local httpc_body = ""
+      -- Set Pre-Request Headers: array to table
+      if config.prereq.headers then
+        setmetatable(httpc_headers, {__index=function(table, key) if rawget(table, key:lower()) then return table[key:lower()]end end})
+        for _, name, value in iter(config.prereq.headers) do
+          if name then
+            httpc_headers[name] = val(value, data_json)
+          end
         end
       end
+      -- Set Pre-Request Query
+      if config.prereq.query then
+        for _, name, value in iter(config.prereq.query) do
+          if name then
+            httpc_query[name] = val(value, data_json)
+          end
+        end
+      end
+      -- Set Pre-Request Body if there it is not nil
+      if config.prereq.body then
+        if httpc_headers["Content-Type"] == "application/x-www-form-urlencoded" then
+          local httpc_body = val(config.prereq.body, data_json, true)
+        else
+          local httpc_body = val(config.prereq.body, data_json)
+        end
+      end
+      -- Call Prior Server
       local res, err = httpc:request_uri(config.prereq.url, {
         method = config.prereq.http_method or "POST",
         ssl_verify = config.prereq.ssl_verify or false,
         headers = httpc_headers,
-        body = config.prereq.body or ""
+        query = httpc_query,
+        body = httpc_body
       })
       if err then
         ngx.log(ngx.ERR, "ERR: ", err, res.body)
       else
-        res_json.res_headers = res.headers
-        res_json.res_body = cjson.decode(res.body)
+        data_json.res_headers = res.headers
+        local res_status, res_body_json = pcall(cjson.decode, res.body)
+        if res_status then
+          data_json.res_body = res_body_json
+        else
+          data_json.res_body = {}
+        end   
       end
     
       --LOGING
@@ -119,11 +145,27 @@ function PriorReqFunction:access(config)
     end
   end
 
-  for _, name, value in iter(config.request.headers) do
-    ngx.req.set_header(name, val(value, res_json))
+  -- Set Request Headers: not touch existing ones
+  if config.request.headers then
+    for _, name, value in iter(config.request.headers) do
+      ngx.req.set_header(name, val(value, data_json))
+    end
   end
+  -- Set Request Query: not touch existing ones
+  if config.request.query then
+    local new_query = ngx.req.get_uri_args()
+    for _, name, value in iter(config.request.query) do
+      new_query[name] = val(value, data_json)
+    end
+    ngx.req.set_uri_args(new_query)
+  end
+  -- Set Body: completely overwrite existing body
   if config.request.body then
-    ngx.req.set_body_data(config.request.body)
+    if ngx.req.get_headers()["Content-Type"] == "application/x-www-form-urlencoded" then
+      ngx.req.set_body_data(val(config.request.body, data_json, true))
+    else
+      ngx.req.set_body_data(val(config.request.body, data_json))
+    end
   end
 end
 
