@@ -131,7 +131,7 @@ function PriorReqFunction:access(config)
         body = httpc_body
       })
       if err then
-        ngx.log(ngx.ERR, "ERR: ", err, "res.body=", res.body or "nil")
+        ngx.log(ngx.ERR, "ERR: ", err)
       else
         data_json.res_headers = res.headers
         if data_json.res_headers['Content-Type'] and data_json.res_headers['Content-Type']:lower() == 'application/json' then
