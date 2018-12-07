@@ -37,7 +37,7 @@ function PriorReqFunction:access(config)
 
   local function val(value_str, source_json, urlencode)
     -- Replace {{value}} with the value from source_json.
-    if not source_json then
+    if not source_json or not value_str then
       return value_str
     end
     local val_return = value_str
