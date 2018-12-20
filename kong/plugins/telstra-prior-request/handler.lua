@@ -151,28 +151,32 @@ function PriorReqFunction:access(config)
     end
   end
 
-  -- Set Request Headers: not touch existing ones
-  if config.request and config.request.headers then
-    for _, name, value in iter(config.request.headers) do
-      ngx.req.set_header(name, val(value, data_json))
+  -- Set Request Related Params
+  if config.request then
+    -- Set Request Headers: not touch existing ones
+    if config.request.headers then
+      for _, name, value in iter(config.request.headers) do
+        ngx.req.set_header(name, val(value, data_json))
+      end
+    end
+    -- Set Request Query: not touch existing ones
+    if config.request.query then
+      local new_query = ngx.req.get_uri_args()
+      for _, name, value in iter(config.request.query) do
+        new_query[name] = val(value, data_json)
+      end
+      ngx.req.set_uri_args(new_query)
+    end
+    -- Set Body: completely overwrite existing body
+    if config.request.body then
+      if ngx.req.get_headers()["Content-Type"] == "application/x-www-form-urlencoded" then
+        ngx.req.set_body_data(val(config.request.body, data_json, true))
+      else
+        ngx.req.set_body_data(val(config.request.body, data_json))
+      end
     end
   end
-  -- Set Request Query: not touch existing ones
-  if config.request and config.request.query then
-    local new_query = ngx.req.get_uri_args()
-    for _, name, value in iter(config.request.query) do
-      new_query[name] = val(value, data_json)
-    end
-    ngx.req.set_uri_args(new_query)
-  end
-  -- Set Body: completely overwrite existing body
-  if config.request and config.request.body then
-    if ngx.req.get_headers()["Content-Type"] == "application/x-www-form-urlencoded" then
-      ngx.req.set_body_data(val(config.request.body, data_json, true))
-    else
-      ngx.req.set_body_data(val(config.request.body, data_json))
-    end
-  end
+
   -- Set Appended Upstream URI
   if config.upstream_path_append then
     if ngx.var.upstream_uri:sub(-1) == '/' then
