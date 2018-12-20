@@ -43,8 +43,19 @@ local function check_url(value)
   return true
 end
 
+local function check_path(value)
+  if not value then
+    return true
+  end
+  if value:sub(1,1) == "/" then
+    return false, "Cannot start with /"
+  end
+  return true
+end
+
 return {
   fields = {
+    upstream_path_append = {type = "string", func = check_path},
     prereq = {
       type = "table",
       schema = {

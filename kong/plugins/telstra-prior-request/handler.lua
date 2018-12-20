@@ -70,7 +70,7 @@ function PriorReqFunction:access(config)
   else
     data_json.req_query = req_query
   end
-  -- Grab Json Body from Request if specified in Application/Json
+  -- Grab Json Body from Request if specified in Headers as Application/Json
   ngx.req.read_body()
   local req_body = ngx.req.get_body_data()
   if data_json.req_headers['Content-Type'] and data_json.req_headers['Content-Type']:lower() == 'application/json' then
@@ -121,7 +121,8 @@ function PriorReqFunction:access(config)
           httpc_body = val(config.prereq.body, data_json)
         end
       end
-
+      -- Translate variables in url
+      local httpc_url = val(config.prereq.url, data_json, true)
       -- Call Prior Server
       local res, err = httpc:request_uri(config.prereq.url, {
         method = config.prereq.http_method or "POST",
@@ -131,10 +132,10 @@ function PriorReqFunction:access(config)
         body = httpc_body
       })
       if err then
-        ngx.log(ngx.ERR, "ERR: ", err)
+        ngx.log(ngx.ERR, "SERVER_ERR: RESPONCE_BODY: ", err)
       else
         data_json.res_headers = res.headers
-        if data_json.res_headers['Content-Type'] and data_json.res_headers['Content-Type']:lower() == 'application/json' then
+        if data_json.res_headers['Content-Type'] and data_json.res_headers['Content-Type']:lower():match('application/json') then
           local res_status, res_body_json = pcall(cjson.decode, res.body)
           if res_status then
             data_json.res_body = res_body_json
@@ -144,7 +145,9 @@ function PriorReqFunction:access(config)
         end
       end
       --LOGING
-      --ngx.log(ngx.ERR, "RESPONCE_BODY: ", res.body)
+      if data_json.res_body and (data_json.res_body["error"] or data_json.res_body["Error"] or data_json.res_body["ERROR"]) then
+        ngx.log(ngx.ERR, "RESPONCE_ERR: RESPONCE_BODY: ", res.body)
+      end
     end
   end
 
@@ -170,11 +173,19 @@ function PriorReqFunction:access(config)
       ngx.req.set_body_data(val(config.request.body, data_json))
     end
   end
+  -- Set Appended Upstream URI
+  if config.upstream_path_append then
+    if ngx.var.upstream_uri:sub(-1) == '/' then
+      ngx.var.upstream_uri = ngx.var.upstream_uri..val(config.upstream_path_append, data_json)
+    else
+      ngx.var.upstream_uri = ngx.var.upstream_uri.."/"..val(config.upstream_path_append, data_json)
+    end
+  end
 end
 
 
 PriorReqFunction.PRIORITY = 999
-PriorReqFunction.VERSION = "0.1.0"
+PriorReqFunction.VERSION = "0.3.0"
 
 
 return PriorReqFunction

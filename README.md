@@ -41,6 +41,7 @@ Taking Telstra notification API for example, when an end user/agent calls the no
 - config.prereq.url: the url of prior-call. (String, unencoded url)
 - config.request.body: overwrite the body of service-call. (String)
 - config.request.headers: add headers to service-call. (Array of strings separated by ```,```)
+- config.upstream_path_append: append path to upstream uri. Varaibles are compatible in the appended path.
 - api_id, service_id, route_id and consumer_id are heritated from standard Kong plugin. Please refer to Kong Doc.
 
 
