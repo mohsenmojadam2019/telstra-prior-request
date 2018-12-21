@@ -49,12 +49,11 @@ Taking Telstra notification API for example, when an end user/agent calls the no
 When configuring this plugin in Kong Admin Dashboard, variables from 4 sources( both headers and body of request of service-call and response of prior-call: req_headers, req_body, res_headers and res_body) can be used. 
 However the rules below apply:
 - Variables must follow the format '{{KEY:VALUE}}'(quotation marks here and below are not included).
-- The available 'KEY' are 'req_body', 'res_body', 'req_headers', and 'req_headers'.
+- The available 'KEY' are 'res_headers', 'res_body', 'req_headers', 'req_query'  and 'req_body'.
 - 'VALUE' is case-insensitive when 'KEY' is 'req_headers' or 'res_headers' following HTTP standards.
-- 'VALUE' is case-sensitive when 'KEY' is 'req_body' or 'res_body'.
+- 'VALUE' is case-sensitive when 'KEY' is 'req_body' or 'req_query' or 'res_body'.
 - 'req_body' is only available when 'content-type:application/json' is in 'req_headers'.
 - 'req_body' and 'res_body' must be json-formatted string and only one level variables can be used.
-- 'req_body' and 'req_headers' are only available for middel-call.
 - 'res_body' and 'res_headers' are only available for service-call.
 
 ## Attenttion:
@@ -62,3 +61,8 @@ However the rules below apply:
 -  Not obeying the order in installation will cause the failure of Kong start
 -  Not obeying the order in uninstallation will fail Kong
 -  User input error precaution has not been developed yes in Lua code.
+
+## Versions:
+- 0.3.0: Add parameter 'config.upstream_path_append'; Allow 'req_body', 'req_query' and 'req_headers' in request.
+- 0.2.1: Add query related parameters.
+- 0.1.1: Achieve middle call.
