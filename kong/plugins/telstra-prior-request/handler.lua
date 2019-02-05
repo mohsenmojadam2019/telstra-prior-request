@@ -154,7 +154,7 @@ function PriorReqFunction:access(config)
         body = httpc_body
       })
       if err then
-        ngx.log(ngx.ERR, "SERVER_ERR: RESPONCE_BODY: ", err, "; REQUEST: URL: ", httpc_url,
+        ngx.log(ngx.ERR, "SERVER_ERR: RESPONCE_BODY: ", err, ", REQUEST: URL: ", httpc_url,
           ", BODY: ", httpc_body, ", HEADERS: ", table_to_string(httpc_headers), 
           ", QUERY: ", table_to_string(httpc_query), 
           ", METHOD: ", httpc_method, 
