@@ -20,6 +20,25 @@ function PriorReqFunction:access(config)
   local url = require "socket.url"
   local data_json = {}
 
+  local function table_to_string(tbl)
+    local result = ""
+    for k, v in pairs(tbl) do
+        result = result.."[\""..k.."\"]".."="
+        if type(v) == "table" then
+            result = result..table_to_string(v)
+        elseif type(v) == "boolean" then
+            result = result..tostring(v)
+        else
+            result = result.."\""..v.."\""
+        end
+        result = result..","
+    end
+    -- Remove tailing commas from the result
+    if result ~= "" then
+        result = result:sub(1, result:len()-1)
+    end
+    return "{"..result.."}"
+  end
   local function iter(config_array)
     return function(config_array, i)
       i = i + 1
@@ -123,16 +142,23 @@ function PriorReqFunction:access(config)
       end
       -- Translate variables in url
       local httpc_url = val(config.prereq.url, data_json, true)
+      -- Get other parameters
+      local httpc_method = config.prereq.http_method or "POST"
+      local httpc_ssl_verify = config.prereq.ssl_verify or false
       -- Call Prior Server
-      local res, err = httpc:request_uri(config.prereq.url, {
-        method = config.prereq.http_method or "POST",
-        ssl_verify = config.prereq.ssl_verify or false,
+      local res, err = httpc:request_uri(httpc_url, {
+        method = httpc_method,
+        ssl_verify = httpc_ssl_verify,
         headers = httpc_headers,
         query = httpc_query,
         body = httpc_body
       })
       if err then
-        ngx.log(ngx.ERR, "SERVER_ERR: RESPONCE_BODY: ", err)
+        ngx.log(ngx.ERR, "SERVER_ERR: RESPONCE_BODY: ", err, " REQUEST: URL: ", httpc_url,
+          " BODY: ", httpc_body, " HEADERS: ", table_to_string(httpc_headers), 
+          " QUERY: ", table_to_string(httpc_query), 
+          " METHOD: ", httpc_method, 
+          " SSL_VERIFY: ", tostring(httpc_ssl_verify))
       else
         data_json.res_headers = res.headers
         if data_json.res_headers['Content-Type'] and data_json.res_headers['Content-Type']:lower():match('application/json') then
