@@ -34,11 +34,13 @@ Taking Telstra notification API for example, when an end user/agent calls the no
 -  Restart Kong daemon
 
 ## Parameter Explanation:
+- config.debug: Debug model. Write all information into proxy_error.log as notices.
 - config.prereq.body: set the body for prior-call. (String)
 - config.prereq.headers: set the headers for prior-call. (Array of strings separated by ```,```)
 - config.prereq.http_method: HTTP methods, default to ```POST```. (String)
 - config.prereq.ssl_verify: whether to check ssl. (Boolean)
 - config.prereq.url: the url of prior-call. (String, unencoded url)
+- config.prereq.show_response: prior-call response as final response when in error
 - config.request.body: overwrite the body of service-call. (String)
 - config.request.headers: add headers to service-call. (Array of strings separated by ```,```)
 - config.upstream_path_append: append path to upstream uri. Varaibles are compatible in the appended path.
@@ -63,10 +65,11 @@ However the rules below apply:
 -  User input error precaution has not been developed yes in Lua code.
 
 ## Versions:
+- 1.0.0: Add debug mode and prior-call response as the first version used in production.
 - 0.3.0: Add parameter 'config.upstream_path_append'; Allow 'req_body', 'req_query' and 'req_headers' in request.
 - 0.2.1: Add query related parameters.
 - 0.1.1: Achieve middle call.
 
 ## Developement
-- ```luarock make <kong-plugin-telstra-prior-request-0.3.1-0.rockspec>``` will install from source using spec in the folder.
-- ```luarocks pack kong-plugin-telstra-prior-request 0.3.1-0``` pack installed plugin
+- ```luarock make <kong-plugin-telstra-prior-request-1.0.0-0.rockspec>``` will install from source using spec in the folder.
+- ```luarocks pack kong-plugin-telstra-prior-request 1.0.0-0``` pack installed plugin

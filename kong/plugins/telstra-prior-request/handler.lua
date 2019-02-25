@@ -1,15 +1,31 @@
--- Written by Dr. Xiaoming (Raymond) Zheng  in November 2018 
--- Instert another call a header of the service call
--- Able to use variables from headers and body.
+-- Written by Dr. Xiaoming (Raymond) Zheng  in February 2019
+-- Instert another call aheader of the service call
+-- Able to use variables from headers and body and query.
 
 local BasePlugin = require "kong.plugins.base_plugin"
+local responses = require "kong.tools.responses"
 local PriorReqFunction = BasePlugin:extend()
 
+local function table_to_string(tbl)
+  if type(tbl) == "table" then
+    local result = ""
+    for k, v in pairs(tbl) do
+      result = result.."[\""..k.."\"]".."="..table_to_string(v)..","
+    end
+    if result ~= "" then
+      result = result:sub(1, result:len()-1)
+    end
+    return "{"..result.."}"
+  elseif type(tbl) == "boolean" or type(tbl) == "number" or type(tbl) == "nil" or type(tbl) == "string" then
+    return "\""..tostring(tbl).."\""
+  else
+    return type(tbl)
+  end
+end
 
 function PriorReqFunction:new()
   PriorReqFunction.super.new(self, "Telstra Prior Request")
 end
-
 
 function PriorReqFunction:access(config)
   PriorReqFunction.super.access(self)
@@ -19,26 +35,7 @@ function PriorReqFunction:access(config)
   local httpc = http.new()
   local url = require "socket.url"
   local data_json = {}
-
-  local function table_to_string(tbl)
-    local result = ""
-    for k, v in pairs(tbl) do
-        result = result.."[\""..k.."\"]".."="
-        if type(v) == "table" then
-            result = result..table_to_string(v)
-        elseif type(v) == "boolean" then
-            result = result..tostring(v)
-        else
-            result = result.."\""..v.."\""
-        end
-        result = result..","
-    end
-    -- Remove tailing commas from the result
-    if result ~= "" then
-        result = result:sub(1, result:len()-1)
-    end
-    return "{"..result.."}"
-  end
+  
   local function iter(config_array)
     return function(config_array, i)
       i = i + 1
@@ -74,7 +71,6 @@ function PriorReqFunction:access(config)
     end
     return val_return
   end
-  
   -- Grab Headers from Request
   local req_headers, err = ngx.req.get_headers()
   if err then
@@ -97,11 +93,15 @@ function PriorReqFunction:access(config)
     if status then
       data_json.req_body = req_body_json
     else
-      ngx.log(ngx.ERR, "The user input request body:", req_body, " cannot be turned to json!")
+      ngx.log(ngx.ERR, "INPUT ERROR: The user input request body:", req_body, " cannot be turned to json!")
       data_json.req_body = {}
     end
   end
-
+  -- Debug Mode: Before Request
+  if config.debug then
+    ngx.log(ngx.NOTICE, "PLUGIN_DEBUG_MODE@ORIGIONAL_REQUEST", ", headers: ", table_to_string(req_headers),
+    ", body: ", req_body, ", query: ", table_to_string(req_query))
+  end  
   -- Make a prior call if not calling itself
   if config.prereq and config.prereq.url then
     local req_url_parse = url.parse(config.prereq.url)
@@ -110,7 +110,7 @@ function PriorReqFunction:access(config)
     local ngx_path = ngx.var.uri:match('(/.-)/?$') or "/"
     if req_url_parse.host:lower() == ngx.var.host:lower() and req_path == ngx_path and req_url_parse.port==ngx.var.server_port then
       -- Avoid Self-Call: same host and same path and same port
-      ngx.log(ngx.ERR, "CIRCLE: The prior API calls itself. ", config.prereq.url, " vs ", ngx.var.host, ngx.var.uri)
+      ngx.log(ngx.ERR, "CIRCLE ERROR: The prior API calls itself. ", config.prereq.url, " vs ", ngx.var.host, ngx.var.uri)
     else
       local httpc_headers = {}
       local httpc_query = {}
@@ -145,6 +145,12 @@ function PriorReqFunction:access(config)
       -- Get other parameters
       local httpc_method = config.prereq.http_method or "POST"
       local httpc_ssl_verify = config.prereq.ssl_verify or false
+      -- Debug Mode: Before Pre-Request
+      if config.debug then
+        ngx.log(ngx.NOTICE, "PLUGIN_DEBUG_MODE@PRIOR_REQUEST", ", url: ", httpc_url, ", body: ", httpc_body,
+        ", headers: ", table_to_string(httpc_headers), ", query: ", table_to_string(httpc_query),
+        ", method: ", httpc_method, ", ssl_verify: ", tostring(httpc_ssl_verify))
+      end
       -- Call Prior Server
       local res, err = httpc:request_uri(httpc_url, {
         method = httpc_method,
@@ -153,14 +159,22 @@ function PriorReqFunction:access(config)
         query = httpc_query,
         body = httpc_body
       })
+      -- Debug Mode: After Pre-Request
+      if config.debug then
+        ngx.log(ngx.NOTICE, "PLUGIN_DEBUG_MODE@PRIOR_RESPONSE", ", response: ", table_to_string(res))
+      end
       if err then
-        ngx.log(ngx.ERR, "SERVER_ERR: RESPONCE_BODY: ", err, ", REQUEST: URL: ", httpc_url,
+        ngx.log(ngx.ERR, "PRIOR_REQUEST_ERR: RESPONCE_ERR_BODY: ", err, ", REQUEST: URL: ", httpc_url,
           ", BODY: ", httpc_body, ", HEADERS: ", table_to_string(httpc_headers), 
           ", QUERY: ", table_to_string(httpc_query), 
           ", METHOD: ", httpc_method, 
           ", SSL_VERIFY: ", tostring(httpc_ssl_verify))
+        if config.prereq.show_reponse then
+          return responses.send(400, err)
+        end
       else
         data_json.res_headers = res.headers
+        data_json.status = res.status or 400
         if data_json.res_headers['Content-Type'] and data_json.res_headers['Content-Type']:lower():match('application/json') then
           local res_status, res_body_json = pcall(cjson.decode, res.body)
           if res_status then
@@ -170,9 +184,13 @@ function PriorReqFunction:access(config)
           end   
         end
       end
-      --LOGING
+      --LOGING: when json reponse contains error info
       if data_json.res_body and (data_json.res_body["error"] or data_json.res_body["Error"] or data_json.res_body["ERROR"]) then
-        ngx.log(ngx.ERR, "RESPONCE_ERR: RESPONCE_BODY: ", res.body)
+        ngx.log(ngx.ERR, "PRIOR_REQUEST_RESPONSE_ERR: RESPONCE_BODY: ", res.body, ", RESPONCE_HEADERS: ", table_to_string(data_json.res_headers),
+        ", RESPONSE_STATUS: ", data_json.status)
+        if config.prereq.show_reponse then
+          return responses.send(data_json.status, res.body)
+        end
       end
     end
   end
@@ -213,9 +231,17 @@ function PriorReqFunction:access(config)
   end
 end
 
+function PriorReqFunction:body_filter(config)
+  PriorReqFunction.super.body_filter(self)
+  local chunk, eof = ngx.arg[1], ngx.arg[2]
+  if config.debug then
+    ngx.log(ngx.NOTICE, "PLUGIN_DEBUG_MODE@FINAL_RESPONSE@CHUNK", ", headers: ", table_to_string(ngx.resp.get_headers()),
+    ", body: ", chunk, ", EOF: ", eof, ", ")
+  end 
+end
 
 PriorReqFunction.PRIORITY = 999
-PriorReqFunction.VERSION = "0.3.0"
+PriorReqFunction.VERSION = "1.0.0"
 
 
 return PriorReqFunction

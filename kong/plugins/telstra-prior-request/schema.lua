@@ -56,6 +56,7 @@ end
 return {
   fields = {
     upstream_path_append = {type = "string", func = check_path},
+    debug = {type = "boolean", default = false},
     prereq = {
       type = "table",
       schema = {
@@ -65,7 +66,8 @@ return {
           body = {type = "string"},
           query = {type = "array", func = check_for_value},
           headers = {type = "array", func = check_for_value},
-          ssl_verify = {type = "boolean", default = false}
+          ssl_verify = {type = "boolean", default = false},
+          show_reponse = {type = "boolean", default = false}
         }
       }
     },
