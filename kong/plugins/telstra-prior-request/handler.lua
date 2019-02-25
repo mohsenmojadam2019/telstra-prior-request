@@ -93,7 +93,7 @@ function PriorReqFunction:access(config)
     if status then
       data_json.req_body = req_body_json
     else
-      ngx.log(ngx.ERR, "INPUT ERROR: The user input request body:", req_body, " cannot be turned to json!")
+      ngx.log(ngx.ERR, "INPUT ERROR: The user input request body: \"", req_body, "\" cannot be turned to json!")
       data_json.req_body = {}
     end
   end
