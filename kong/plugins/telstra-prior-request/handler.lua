@@ -88,7 +88,7 @@ function PriorReqFunction:access(config)
   -- Grab Json Body from Request if specified in Headers as Application/Json
   ngx.req.read_body()
   local req_body = ngx.req.get_body_data()
-  if data_json.req_headers['Content-Type'] and data_json.req_headers['Content-Type']:lower() == 'application/json' then
+  if req_body and data_json.req_headers['Content-Type'] and data_json.req_headers['Content-Type']:lower() == 'application/json' then
     local status, req_body_json = pcall(cjson.decode, req_body)
     if status then
       data_json.req_body = req_body_json
