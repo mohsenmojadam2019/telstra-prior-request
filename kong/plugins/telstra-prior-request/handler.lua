@@ -229,11 +229,17 @@ function PriorReqFunction:access(config)
       ngx.var.upstream_uri = ngx.var.upstream_uri.."/"..val(config.upstream_path_append, data_json)
     end
   end
+  -- Debug Mode: Final Request
+  if config.debug then
+    ngx.log(ngx.NOTICE, "PLUGIN_DEBUG_MODE@FINAL_REQUEST", ", headers: ", table_to_string(ngx.req.get_headers()),
+    ", body: ", tostring(ngx.req.get_body_data()), ", query: ", table_to_string(ngx.req.get_uri_args()))
+  end
 end
 
 function PriorReqFunction:body_filter(config)
   PriorReqFunction.super.body_filter(self)
   local chunk, eof = ngx.arg[1], ngx.arg[2]
+  -- Debug Mode: Final Response
   if config.debug then
     ngx.log(ngx.NOTICE, "PLUGIN_DEBUG_MODE@FINAL_RESPONSE@CHUNK", ", headers: ", table_to_string(ngx.resp.get_headers()),
     ", body: ", chunk, ", EOF: ", eof, ", ")
