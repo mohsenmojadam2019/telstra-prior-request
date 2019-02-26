@@ -265,7 +265,8 @@ function PriorReqFunction:body_filter(config)
   local chunk, eof = ngx.arg[1], ngx.arg[2]
   -- Debug Mode Part 5: Final Response
   if config.debug then
-    local msg = "PLUGIN_DEBUG_MODE@FINAL_RESPONSE@CHUNK"..", body: "..chunk..", headers: "..table_to_string(ngx.resp.get_headers())..", EOF: "..tostring(eof)
+    local msg = "PLUGIN_DEBUG_MODE@FINAL_RESPONSE@CHUNK"..", body: "..chunk..", headers: "..table_to_string(ngx.resp.get_headers())..
+      ", EOF: "..tostring(eof)..", status: "..tostring(ngx.status)
     if ngx.status and ngx.status >= 400 then
       log_level = "ERR"
     end
