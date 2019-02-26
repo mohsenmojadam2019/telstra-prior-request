@@ -65,6 +65,7 @@ However the rules below apply:
 -  User input error precaution has not been developed yes in Lua code.
 
 ## Versions:
+- 1.0.1: Add debug info into syslog
 - 1.0.0: Add debug mode and prior-call response as the first version used in production.
 - 0.3.0: Add parameter 'config.upstream_path_append'; Allow 'req_body', 'req_query' and 'req_headers' in request.
 - 0.2.1: Add query related parameters.
@@ -73,3 +74,6 @@ However the rules below apply:
 ## Developement
 - ```luarock make <kong-plugin-telstra-prior-request-1.0.0-0.rockspec>``` will install from source using spec in the folder.
 - ```luarocks pack kong-plugin-telstra-prior-request 1.0.0-0``` pack installed plugin
+
+## Syslog Check:
+- journalctl -u kongd <--no-pager>

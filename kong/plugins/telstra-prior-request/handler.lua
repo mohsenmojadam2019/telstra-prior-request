@@ -3,8 +3,26 @@
 -- Able to use variables from headers and body and query.
 
 local BasePlugin = require "kong.plugins.base_plugin"
+local lsyslog = require "lsyslog"
 local responses = require "kong.tools.responses"
 local PriorReqFunction = BasePlugin:extend()
+
+-- log into syslog: serverity=notice/err
+local log_level = "NOTICE"
+local function send_to_syslog(severity, message)
+  local function syslog(premature, severity, message)
+    if premature then
+      return
+    end
+    lsyslog.open("KONGP", lsyslog.FACILITY_USER)
+    lsyslog.log(lsyslog["LOG_"..string.upper(severity)], message)
+  end
+  local ok, err = ngx.timer.at(0, syslog, severity, message)
+  if not ok then
+    ngx.log(ngx.ERR, "LOG_ERROR: failed to create timer: ", err)
+  end
+end
+
 
 local function table_to_string(tbl)
   if type(tbl) == "table" then
@@ -97,10 +115,11 @@ function PriorReqFunction:access(config)
       data_json.req_body = {}
     end
   end
-  -- Debug Mode: Before Request
+  -- Debug Mode Part 1: Before Request
   if config.debug then
-    ngx.log(ngx.NOTICE, "PLUGIN_DEBUG_MODE@ORIGIONAL_REQUEST", ", headers: ", table_to_string(req_headers),
-    ", body: ", req_body, ", query: ", table_to_string(req_query))
+    local msg = "PLUGIN_DEBUG_MODE@ORIGIONAL_REQUEST, body: "..tostring(req_body)..", headers: "..table_to_string(req_headers)..
+      ", query: "..table_to_string(req_query)
+    send_to_syslog(log_level, msg)
   end  
   -- Make a prior call if not calling itself
   if config.prereq and config.prereq.url then
@@ -145,11 +164,11 @@ function PriorReqFunction:access(config)
       -- Get other parameters
       local httpc_method = config.prereq.http_method or "POST"
       local httpc_ssl_verify = config.prereq.ssl_verify or false
-      -- Debug Mode: Before Pre-Request
+      -- Debug Mode Part 2: Before Pre-Request
       if config.debug then
-        ngx.log(ngx.NOTICE, "PLUGIN_DEBUG_MODE@PRIOR_REQUEST", ", url: ", httpc_url, ", body: ", httpc_body,
-        ", headers: ", table_to_string(httpc_headers), ", query: ", table_to_string(httpc_query),
-        ", method: ", httpc_method, ", ssl_verify: ", tostring(httpc_ssl_verify))
+        local msg = "PLUGIN_DEBUG_MODE@PRIOR_REQUEST, url: "..httpc_url, "..body: "..tostring(httpc_body)..", headers: "..table_to_string(httpc_headers)..
+          ", query: "..table_to_string(httpc_query)..", method: "..httpc_method.."ssl_verify: "..tostring(httpc_ssl_verify)
+        send_to_syslog(log_level, msg)
       end
       -- Call Prior Server
       local res, err = httpc:request_uri(httpc_url, {
@@ -159,9 +178,13 @@ function PriorReqFunction:access(config)
         query = httpc_query,
         body = httpc_body
       })
-      -- Debug Mode: After Pre-Request
+      -- Debug Mode Part 3: After Pre-Request
       if config.debug then
-        ngx.log(ngx.NOTICE, "PLUGIN_DEBUG_MODE@PRIOR_RESPONSE", ", response: ", table_to_string(res))
+        if res.status and res.status >= 400 then
+          log_level = "ERR"
+        end
+        local msg = "PLUGIN_DEBUG_MODE@PRIOR_RESPONSE"..", response: "..table_to_string(res)
+        send_to_syslog(log_level, msg)
       end
       if err then
         ngx.log(ngx.ERR, "PRIOR_REQUEST_ERR: RESPONCE_ERR_BODY: ", err, ", REQUEST: URL: ", httpc_url,
@@ -229,20 +252,24 @@ function PriorReqFunction:access(config)
       ngx.var.upstream_uri = ngx.var.upstream_uri.."/"..val(config.upstream_path_append, data_json)
     end
   end
-  -- Debug Mode: Final Request
+  -- Debug Mode Part 4: Final Request
   if config.debug then
-    ngx.log(ngx.NOTICE, "PLUGIN_DEBUG_MODE@FINAL_REQUEST", ", headers: ", table_to_string(ngx.req.get_headers()),
-    ", body: ", tostring(ngx.req.get_body_data()), ", query: ", table_to_string(ngx.req.get_uri_args()))
+    local msg = "PLUGIN_DEBUG_MODE@FINAL_REQUEST, body: "..tostring(ngx.req.get_body_data())..", headers: "..table_to_string(ngx.req.get_headers())..
+      ", query: "..table_to_string(ngx.req.get_uri_args())
+    send_to_syslog(log_level, msg)
   end
 end
 
 function PriorReqFunction:body_filter(config)
   PriorReqFunction.super.body_filter(self)
   local chunk, eof = ngx.arg[1], ngx.arg[2]
-  -- Debug Mode: Final Response
+  -- Debug Mode Part 5: Final Response
   if config.debug then
-    ngx.log(ngx.NOTICE, "PLUGIN_DEBUG_MODE@FINAL_RESPONSE@CHUNK", ", headers: ", table_to_string(ngx.resp.get_headers()),
-    ", body: ", chunk, ", EOF: ", eof, ", ")
+    local msg = "PLUGIN_DEBUG_MODE@FINAL_RESPONSE@CHUNK"..", body: "..chunk..", headers: "..table_to_string(ngx.resp.get_headers())..", EOF: "..tostring(eof)
+    if ngx.status and ngx.status >= 400 then
+      log_level = "ERR"
+    end
+    send_to_syslog(log_level, msg)
   end 
 end
 
