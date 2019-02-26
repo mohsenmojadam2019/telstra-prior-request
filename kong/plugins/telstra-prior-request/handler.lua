@@ -166,8 +166,8 @@ function PriorReqFunction:access(config)
       local httpc_ssl_verify = config.prereq.ssl_verify or false
       -- Debug Mode Part 2: Before Pre-Request
       if config.debug then
-        local msg = "PLUGIN_DEBUG_MODE@PRIOR_REQUEST, url: "..httpc_url, "..body: "..tostring(httpc_body)..", headers: "..table_to_string(httpc_headers)..
-          ", query: "..table_to_string(httpc_query)..", method: "..httpc_method.."ssl_verify: "..tostring(httpc_ssl_verify)
+        local msg = "PLUGIN_DEBUG_MODE@PRIOR_REQUEST, url: "..httpc_url..", body: "..tostring(httpc_body)..", headers: "..table_to_string(httpc_headers)..
+          ", query: "..table_to_string(httpc_query)..", method: "..httpc_method..", ssl_verify: "..tostring(httpc_ssl_verify)
         send_to_syslog(log_level, msg)
       end
       -- Call Prior Server
