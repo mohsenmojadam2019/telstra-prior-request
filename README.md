@@ -72,8 +72,8 @@ However the rules below apply:
 - 0.1.1: Achieve middle call.
 
 ## Developement
-- ```luarock make <kong-plugin-telstra-prior-request-1.0.0-0.rockspec>``` will install from source using spec in the folder.
-- ```luarocks pack kong-plugin-telstra-prior-request 1.0.0-0``` pack installed plugin
+- ```luarock make <kong-plugin-telstra-prior-request-1.0.1-0.rockspec>``` will install from source using spec in the folder.
+- ```luarocks pack kong-plugin-telstra-prior-request 1.0.1-0``` pack installed plugin
 
 ## Syslog Check:
 - journalctl -u kongd <--no-pager>
