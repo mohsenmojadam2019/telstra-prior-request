@@ -180,7 +180,7 @@ function PriorReqFunction:access(config)
       })
       -- Debug Mode Part 3: After Pre-Request
       if config.debug then
-        if res.status and res.status >= 400 then
+        if res and res.status and res.status >= 400 then
           log_level = "ERR"
         end
         local msg = "PLUGIN_DEBUG_MODE@PRIOR_RESPONSE"..", response: "..table_to_string(res)
