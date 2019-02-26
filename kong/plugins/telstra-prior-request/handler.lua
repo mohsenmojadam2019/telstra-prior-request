@@ -117,6 +117,7 @@ function PriorReqFunction:access(config)
   end
   -- Debug Mode Part 1: Before Request
   if config.debug then
+    log_level = "NOTICE"
     local msg = "PLUGIN_DEBUG_MODE@ORIGIONAL_REQUEST, body: "..tostring(req_body)..", headers: "..table_to_string(req_headers)..
       ", query: "..table_to_string(req_query)
     send_to_syslog(log_level, msg)
@@ -180,7 +181,7 @@ function PriorReqFunction:access(config)
       })
       -- Debug Mode Part 3: After Pre-Request
       if config.debug then
-        if res and res.status and res.status >= 400 then
+        if not res or (res.status and res.status >= 400) then
           log_level = "ERR"
         end
         local msg = "PLUGIN_DEBUG_MODE@PRIOR_RESPONSE"..", response: "..table_to_string(res)
