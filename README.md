@@ -65,6 +65,7 @@ However the rules below apply:
 -  User input error precaution has not been developed yes in Lua code.
 
 ## Versions:
+- 1.3.5: Support Kong EE 0.35. Not compatible with old versions.
 - 1.0.1: Add debug info into syslog
 - 1.0.0: Add debug mode and prior-call response as the first version used in production.
 - 0.3.0: Add parameter 'config.upstream_path_append'; Allow 'req_body', 'req_query' and 'req_headers' in request.

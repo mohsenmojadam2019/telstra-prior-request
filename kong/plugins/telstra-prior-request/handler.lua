@@ -4,7 +4,7 @@
 
 local BasePlugin = require "kong.plugins.base_plugin"
 local lsyslog = require "lsyslog"
-local responses = require "kong.tools.responses"
+local response = kong.response
 local PriorReqFunction = BasePlugin:extend()
 
 -- log into syslog: serverity=notice/err
@@ -194,7 +194,7 @@ function PriorReqFunction:access(config)
           ", METHOD: ", httpc_method, 
           ", SSL_VERIFY: ", tostring(httpc_ssl_verify))
         if config.prereq.show_reponse then
-          return responses.send(400, err)
+          return response.exit(400, err)
         end
       else
         data_json.res_headers = res.headers
@@ -213,7 +213,7 @@ function PriorReqFunction:access(config)
         ngx.log(ngx.ERR, "PRIOR_REQUEST_RESPONSE_ERR: RESPONCE_BODY: ", res.body, ", RESPONCE_HEADERS: ", table_to_string(data_json.res_headers),
         ", RESPONSE_STATUS: ", data_json.status)
         if config.prereq.show_reponse then
-          return responses.send(data_json.status, res.body)
+          return response.exit(data_json.status, res.body)
         end
       end
     end
