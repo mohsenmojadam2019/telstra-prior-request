@@ -1,4 +1,5 @@
--- Written by Dr. Xiaoming (Raymond) Zheng  in February 2019
+-- Written by Dr. Xiaoming Zheng (Raymond) in February 2019
+-- Updated by Dr. Xiaoming Zheng (Raymond) on 28 May 2019
 -- Instert another call aheader of the service call
 -- Able to use variables from headers and body and query.
 
@@ -28,7 +29,7 @@ local function table_to_string(tbl)
   if type(tbl) == "table" then
     local result = ""
     for k, v in pairs(tbl) do
-      result = result.."[\""..k.."\"]".."="..table_to_string(v)..","
+      result = result.."\""..k.."\""..":"..table_to_string(v)..","
     end
     if result ~= "" then
       result = result:sub(1, result:len()-1)
@@ -37,7 +38,7 @@ local function table_to_string(tbl)
   elseif type(tbl) == "boolean" or type(tbl) == "number" or type(tbl) == "nil" or type(tbl) == "string" then
     return "\""..tostring(tbl).."\""
   else
-    return type(tbl)
+    return "<"..type(tbl)..">"
   end
 end
 

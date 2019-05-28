@@ -65,6 +65,7 @@ However the rules below apply:
 -  User input error precaution has not been developed yes in Lua code.
 
 ## Versions:
+- 1.3.5-2: Fix GUI parameter issues for Kong EE 0.35. Not compatible with old versions.
 - 1.3.5: Support Kong EE 0.35. Not compatible with old versions.
 - 1.0.1: Add debug info into syslog
 - 1.0.0: Add debug mode and prior-call response as the first version used in production.
@@ -73,7 +74,7 @@ However the rules below apply:
 - 0.1.1: Achieve middle call.
 
 ## Developement
-- ```luarock make <kong-plugin-telstra-prior-request-1.0.1-0.rockspec>``` will install from source using spec in the folder.
+- ```luarocks make <kong-plugin-telstra-prior-request-1.0.1-0.rockspec>``` will install from source using spec in the folder.
 - ```luarocks pack kong-plugin-telstra-prior-request 1.0.1-0``` pack installed plugin
 
 ## Syslog Check:

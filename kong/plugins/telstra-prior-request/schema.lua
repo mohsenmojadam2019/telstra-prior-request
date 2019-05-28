@@ -1,18 +1,7 @@
+-- Updated on 28May2019 by Dr. Xiaoming Zheng (Raymond)
+
 local find = string.find
 local url = require "socket.url"
--- entries must have colons to set the key and value apart
-local function check_for_value(value)
-  if not value then
-    return true
-  end
-  for i, entry in ipairs(value) do
-    local ok = find(entry, ":")
-    if not ok then
-      return false, "key '" .. entry .. "' has no value"
-    end
-  end
-  return true
-end
 
 local function check_method(value)
   if not value then
@@ -53,33 +42,42 @@ local function check_path(value)
   return true
 end
 
+local colon_strings_array = {
+  type = "array",
+  default = {},
+  elements = { type = "string", match = "^[^:]+:.*$"},
+}
+local typedefs = require "kong.db.schema.typedefs"
 return {
+  name = "telstra-prior-request",
   fields = {
-    upstream_path_append = {type = "string", func = check_path},
-    debug = {type = "boolean", default = false},
-    prereq = {
-      type = "table",
-      schema = {
-        fields = {
-          url = {type = "string", func = check_url},
-          http_method = {type = "string", default = "POST", func = check_method},
-          body = {type = "string"},
-          query = {type = "array", func = check_for_value},
-          headers = {type = "array", func = check_for_value},
-          ssl_verify = {type = "boolean", default = false},
-          show_reponse = {type = "boolean", default = false}
-        }
-      }
-    },
-    request = {
-      type = "table",
-      schema = {
-        fields = {
-          body = {type = "string"},
-          query = {type = "array", func = check_for_value},
-          headers = {type = "array", func = check_for_value}
-        }
-      }
-    }
-  }
+    { run_on = typedefs.run_on_first },
+    { config = {
+      type = "record",
+      fields = {
+        { upstream_path_append = {type = "string", custom_validator = check_path},},
+        { debug = {type = "boolean", default = false},},
+        { prereq = {
+          type = "record",
+          fields = {
+            { url = {type = "string", custom_validator = check_url},},
+            { http_method = {type = "string", default = "POST", custom_validator = check_method},},
+            { body = {type = "string"},},
+            { query = colon_strings_array,},
+            { headers = colon_strings_array,},
+            { ssl_verify = {type = "boolean", default = false},},
+            { show_reponse = {type = "boolean", default = false},},
+            },
+        },},
+        {request = {
+          type = "record",
+          fields = {
+            {body = {type = "string"},},
+            {query = colon_strings_array,},
+            {headers = colon_strings_array,},
+            },
+        },}
+      },
+    },},
+  },
 }
