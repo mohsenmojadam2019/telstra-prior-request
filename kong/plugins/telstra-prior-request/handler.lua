@@ -256,7 +256,7 @@ function PriorReqFunction:access(config)
   end
   -- Debug Mode Part 4: Final Request
   if config.debug then
-    local msg = "PLUGIN_DEBUG_MODE@FINAL_REQUEST, body: "..tostring(ngx.req.get_body_data())..", headers: "..table_to_string(ngx.req.get_headers())..
+    local msg = "PLUGIN_DEBUG_MODE@FINAL_REQUEST, body: "..tostring(ngx.req.get_body_data())..", uri: "..tostring(ngx.var.uri)..", headers: "..table_to_string(ngx.req.get_headers())..
       ", query: "..table_to_string(ngx.req.get_uri_args())
     send_to_syslog(log_level, msg)
   end
