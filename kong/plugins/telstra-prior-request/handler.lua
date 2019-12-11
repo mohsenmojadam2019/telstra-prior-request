@@ -276,7 +276,7 @@ function PriorReqFunction:body_filter(config)
   end 
 end
 
-PriorReqFunction.PRIORITY = 999
+PriorReqFunction.PRIORITY = 666
 PriorReqFunction.VERSION = "1.0.1"
 
 
