@@ -1,7 +1,5 @@
--- Updated on 28May2019 by Dr. Xiaoming Zheng (Raymond)
-
-local find = string.find
-local url = require "socket.url"
+-- Updated on 18Nov2020 by Dr. Xiaoming Zheng (Raymond)
+local typedefs = require "kong.db.schema.typedefs"
 
 local function check_method(value)
   if not value then
@@ -11,23 +9,6 @@ local function check_method(value)
   local ngx_method = ngx["HTTP_" .. method]
   if not ngx_method then
     return false, method .. " is not supported"
-  end
-  return true
-end
-
-local function check_url(value)
-  if not value then
-    return true
-  end
-  local url_parse, err = url.parse(value)
-  if err then
-    return false, "URL input error: "..err
-  end
-  if not url_parse.scheme then
-    return false, "URL input error: no scheme!"
-  end
-  if not url_parse.host then
-    return false, "URL input error: no host!"
   end
   return true
 end
@@ -47,11 +28,10 @@ local colon_strings_array = {
   default = {},
   elements = { type = "string", match = "^[^:]+:.*$"},
 }
-local typedefs = require "kong.db.schema.typedefs"
 return {
   name = "telstra-prior-request",
   fields = {
-    { run_on = typedefs.run_on_first },
+    { protocols = typedefs.protocols_http },
     { config = {
       type = "record",
       fields = {
@@ -60,7 +40,7 @@ return {
         { prereq = {
           type = "record",
           fields = {
-            { url = {type = "string", custom_validator = check_url},},
+            { url = typedefs.url },
             { http_method = {type = "string", default = "POST", custom_validator = check_method},},
             { body = {type = "string"},},
             { query = colon_strings_array,},
