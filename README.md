@@ -65,7 +65,7 @@ However the rules below apply:
 -  User input error precaution has not been developed yes in Lua code.
 
 ## Versions:
-- 2.1.4.1: Fix schema error for 2.x versions and url checking.
+- 2.1.4.2: Fix schema error for 2.x versions and url checking.
 - 1.3.5-2: Fix GUI parameter issues for Kong EE 0.35. Not compatible with old versions.
 - 1.3.5: Support Kong EE 0.35. Not compatible with old versions.
 - 1.0.1: Add debug info into syslog
