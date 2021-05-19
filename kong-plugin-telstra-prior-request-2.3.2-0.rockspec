@@ -1,5 +1,5 @@
 package = "kong-plugin-telstra-prior-request"
-version = "2.1.4-2"
+version = "2.3.2-0"
 local pluginName = package:match("^kong%-plugin%-(.+)$") --telstra-prior-request
 supported_platforms = {"linux"}
 source = {

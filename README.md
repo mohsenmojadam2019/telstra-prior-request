@@ -1,5 +1,5 @@
 # Build for Kong Customized Plugin: Telstra Prior Request
-Written by Dr. Xiaoming (Raymond) Zheng in November 2018
+Written by Dr. Xiaoming (Raymond) Zheng in November 2018, updated in May 2021.
 
 ## Functionality:
 This plugin can make an additional prior API call(named prior-call) when the configured service (named service-call) is called.
@@ -40,7 +40,7 @@ Taking Telstra notification API for example, when an end user/agent calls the no
 - config.prereq.http_method: HTTP methods, default to ```POST```. (String)
 - config.prereq.ssl_verify: whether to check ssl. (Boolean)
 - config.prereq.url: the url of prior-call. (String, unencoded url)
-- config.prereq.show_response: prior-call response as final response when in error
+- config.prereq.cache_ttl: prior-call response cache TTL (seconds). cache is disabled when ttl is set under 5.
 - config.request.body: overwrite the body of service-call. (String)
 - config.request.headers: add headers to service-call. (Array of strings separated by ```,```)
 - config.upstream_path_append: append path to upstream uri. Varaibles are compatible in the appended path.
@@ -65,6 +65,7 @@ However the rules below apply:
 -  User input error precaution has not been developed yes in Lua code.
 
 ## Versions:
+- 2.3.2: Add cache ability. Errors of the prior call are shown as response.
 - 2.1.4.2: Fix schema error for 2.x versions and url checking.
 - 1.3.5-2: Fix GUI parameter issues for Kong EE 0.35. Not compatible with old versions.
 - 1.3.5: Support Kong EE 0.35. Not compatible with old versions.
