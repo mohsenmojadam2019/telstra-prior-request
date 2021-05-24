@@ -80,6 +80,7 @@ However the rules below apply:
 - 0.1.1: Achieve middle call.
 
 ## Developement
+-  Install ZIP first. Otherwise luarock pack will fail without ZIP.
 - ```luarocks make <kong-plugin-telstra-prior-request-1.0.1-0.rockspec>``` will install from source using spec in the folder.
 - ```luarocks pack kong-plugin-telstra-prior-request 1.0.1-0``` pack installed plugin
 
