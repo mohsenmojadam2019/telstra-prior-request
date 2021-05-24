@@ -1,5 +1,6 @@
--- Updated on 18Nov2020 by Dr. Xiaoming Zheng (Raymond)
+-- Updated in May 2021 by Dr. Xiaoming Zheng (Raymond)
 local typedefs = require "kong.db.schema.typedefs"
+local ngx = ngx
 
 local function check_method(value)
   if not value then
@@ -46,7 +47,7 @@ return {
             { query = colon_strings_array,},
             { headers = colon_strings_array,},
             { ssl_verify = {type = "boolean", default = false},},
-            { show_reponse = {type = "boolean", default = false},},
+            { cache_ttl = {type = "number", default = 0},},
             },
         },},
         {request = {
