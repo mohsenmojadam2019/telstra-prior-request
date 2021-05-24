@@ -65,7 +65,7 @@ However the rules below apply:
 -  User input error precaution has not been developed yes in Lua code.
 
 ## Versions:
-- 2.3.2: 
+- 2.3.4: 
     - Add memory cache ability. 
     - Errors of the prior call are shown as response.
     - Response status code is checked.
