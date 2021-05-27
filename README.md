@@ -1,6 +1,12 @@
 # Build for Kong Customized Plugin: Telstra Prior Request
 Written by Dr. Xiaoming (Raymond) Zheng in November 2018, updated in May 2021.
 
+## References:
+https://docs.konghq.com/gateway-oss/2.4.x/plugin-development/
+https://github.com/openresty/lua-nginx-module#ngxshareddict
+https://github.com/ledgetech/lua-resty-http#request_uri
+
+
 ## Functionality:
 This plugin can make an additional prior API call(named prior-call) when the configured service (named service-call) is called.
 The prior-call can accepts variables from both headers and body of service-call.
