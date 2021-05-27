@@ -131,7 +131,7 @@ function PriorReqFunction:access(config)
       ", query: "..table_to_string(req_query)
     send_to_syslog(log_level, msg)
   end
-  -- Make a prior call if not calling itself
+  -- Check whether it is a self-call circle.
   if config.prereq and config.prereq.url then
     local req_url_parse = url.parse(config.prereq.url)
     req_url_parse.port = req_url_parse.port or (req_url_parse.scheme == "http" and "80") or (req_url_parse.scheme == "https" and "443")
