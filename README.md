@@ -19,8 +19,8 @@ Taking Telstra notification API for example, when an end user/agent calls the no
 - [Nginx](https://nginx.org/) >= 1.13.11
 
 ## Installation:
-- Download the package file kong-plugin-telstra-prior-request-0.1.0-0.all.rock
--  ```luarock install kong-plugin-telstra-prior-request-0.1.0-0.all.rock```
+- Download the package file kong-plugin-telstra-prior-request-<version>.all.rock
+-  ```luarock install kong-plugin-telstra-prior-request-<version>.all.rock```
 -  Change 'custom_plugins' in Kong configration file
 -  Restart Kong daemon
 -  Log into Kong Admin Dashboard and click 'New Plugin' under plade 'Plugins'
@@ -40,7 +40,7 @@ Taking Telstra notification API for example, when an end user/agent calls the no
 - config.prereq.http_method: HTTP methods, default to ```POST```. (String)
 - config.prereq.ssl_verify: whether to check ssl. (Boolean)
 - config.prereq.url: the url of prior-call. (String, unencoded url)
-- config.prereq.cache_ttl: prior-call response cache TTL (seconds). cache is disabled when ttl is set under 5.
+- config.prereq.cache_ttl: prior-call response cache TTL (seconds). cache is disabled when ttl is set no larger than 0.
 - config.request.body: overwrite the body of service-call. (String)
 - config.request.headers: add headers to service-call. (Array of strings separated by ```,```)
 - config.upstream_path_append: append path to upstream uri. Varaibles are compatible in the appended path.
@@ -65,7 +65,7 @@ However the rules below apply:
 -  User input error precaution has not been developed yes in Lua code.
 
 ## Versions:
-- 2.3.4: 
+- 2.4.1.0
     - Add memory cache ability. 
     - Errors of the prior call are shown as response.
     - Response status code is checked.
@@ -81,8 +81,8 @@ However the rules below apply:
 
 ## Developement
 -  Install ZIP first. Otherwise luarock pack will fail without ZIP.
-- ```luarocks make <kong-plugin-telstra-prior-request-1.0.1-0.rockspec>``` will install from source using spec in the folder.
-- ```luarocks pack kong-plugin-telstra-prior-request 1.0.1-0``` pack installed plugin
+- ```luarocks make <kong-plugin-telstra-prior-request-2.4.1-0.rockspec>``` will install from source using spec in the folder.
+- ```luarocks pack kong-plugin-telstra-prior-request 2.4.1-0``` pack installed plugin
 
 ## Syslog Check:
 - journalctl -u kongd <--no-pager>

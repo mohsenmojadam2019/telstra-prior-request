@@ -142,14 +142,13 @@ function PriorReqFunction:access(config)
       err_exit("the prior API calls itself", "pre_req_url_err", 400, "config_prereq_url: "..config.prereq.url.." ngx.var.host: "..ngx.var.host.." ngx.var.uri: "..ngx.var.uri)
     end
     ---- directly use ngx.shared.DICT for memory caching.
-    local db_cache, pre_res_cache, ttl, pre_res
+    local db_cache, pre_res_cache, pre_res
 
-    if config.prereq.cache_ttl > 5 then
+    if config.prereq.cache_ttl > 0 then
       db_cache = ngx.shared["kong_db_cache"]
-      pre_res_cache = db_cache:get("PRIOR_CACHE") -- flags not care
-      ttl = db_cache:ttl("PRIOR_CACHE")  -- err not care
+      pre_res_cache = db_cache:get("PRIOR_CACHE") -- flags not care. Return nil if it does not exist or has expired.
     end
-    if db_cache and pre_res_cache and ttl and (ttl >= 5) then
+    if db_cache and pre_res_cache then
       local pre_res_cache_decoded, decode_err=cjson.decode(pre_res_cache)
       err_exit(decode_err, "pre_res_cache_decode_err", 400, "RAW_RESPONSE: "..table_to_string(pre_res_cache))
       pre_res=pre_res_cache_decoded
@@ -204,7 +203,7 @@ function PriorReqFunction:access(config)
         local msg = "PLUGIN_DEBUG_MODE@PRIOR_RESPONSE"..", response: "..table_to_string(pre_res)
         send_to_syslog(pre_res.status >= 400 and "ERR" or log_level, msg)
       end
-      --LOG and Stop: when reponse contains error
+      -- LOG and Stop: when reponse status contains error
       if pre_res.status < 200 or pre_res.status > 299 then
         err_exit(pre_res.body or "response Header 'Content-Type' is missing or not 'application/json'", "pre_res_status_err", pre_res.status, "PRE_RES: "..pre_res.status, pre_res.headers['Content-Type'])
       end
@@ -213,7 +212,7 @@ function PriorReqFunction:access(config)
         err_exit(pre_res.body or "response Header 'Content-Type' is missing or not 'application/json'", "pre_res_content_type_err", 400, "PRE_RES_STATUS: "..pre_res.status..", PRE_RES_HEADERS: "..table_to_string(pre_res.res_headers), pre_res.headers['Content-Type'])
       end
 
-      -- Write Cache. "db_cache" will be nil if config.prereq.cache_ttl<5
+      -- Write Cache. "db_cache" will be nil if config.prereq.cache_ttl<=0
       if db_cache then
         local res_to_cache = {headers=pre_res.headers, body=pre_res.body, status=pre_res.status}
         local val_cache, encode_err = cjson.encode(res_to_cache)
