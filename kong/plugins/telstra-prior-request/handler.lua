@@ -196,7 +196,7 @@ function PriorReqFunction:access(config)
       end
       -- Call Prior Server
       local res_p, err_p = httpc:request_uri(httpc_url, {method = httpc_method, ssl_verify = httpc_ssl_verify, headers = httpc_headers, query = httpc_query, body = httpc_body})
-      err_exit(err_p, "pre_httpc_err", 400, "PRE_REQ_URL: "..httpc_url..", PRE_REQ_BODY: "..httpc_body..", PRE_REQ_HEADERS: "..table_to_string(httpc_headers)..", PRE_REQ_QUERY: "..table_to_string(httpc_query)..", PRE_REQ_METHOD: "..httpc_method..", PRE_REQ_SSL_VERIFY: "..tostring(httpc_ssl_verify), res_p.headers['Content-Type'])
+      err_exit(err_p, "pre_httpc_err", 400, "PRE_REQ_URL: "..httpc_url..", PRE_REQ_BODY: "..httpc_body..", PRE_REQ_HEADERS: "..table_to_string(httpc_headers)..", PRE_REQ_QUERY: "..table_to_string(httpc_query)..", PRE_REQ_METHOD: "..httpc_method..", PRE_REQ_SSL_VERIFY: "..tostring(httpc_ssl_verify))
       pre_res = res_p
 
       -- Debug Mode Part 3: After Pre-Request
