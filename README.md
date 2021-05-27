@@ -66,10 +66,16 @@ However the rules below apply:
 
 ## Versions:
 - 2.4.1-0
-    - Add memory cache ability. 
-    - Errors of the prior call are shown as response.
-    - Response status code is checked.
-    - Error messages in response body are ignored.
+    - Add memory cache ability, using memory method. 
+    - Errors of the inserted prior call are shown as response.
+    - Any errors of the plugin are shown as an error response.
+    - Prior call response status code is checked.
+    - Error messages in response body are ignored when status is as of success.
+    - Logging is optimised.
+    - Coding is concised.
+    - For security reason, plugin parameters are not included in error response. They are kepted in logs only.
+    - For SSL verification to work properly, the parameter "lua_ssl_trusted_certificate" has be to set properly in Kong configuration.
+        - For CentOS 7: lua_ssl_trusted_certificate = /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem
 - 2.1.4-2: Fix schema error for 2.x versions and url checking.
 - 1.3.5-2: Fix GUI parameter issues for Kong EE 0.35. Not compatible with old versions.
 - 1.3.5: Support Kong EE 0.35. Not compatible with old versions.
