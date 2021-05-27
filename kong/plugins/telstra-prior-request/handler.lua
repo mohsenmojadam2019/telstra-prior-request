@@ -1,6 +1,6 @@
 -- Written by Dr. Xiaoming Zheng (Raymond) in February 2019.
 -- Updated by Dr. Xiaoming Zheng (Raymond) in May 2021.
--- Instert another call aheader of the service call
+-- Instert another call ahead of the service call
 -- and grab information from response to insert into current call.
 -- Able to use variables from headers and body and query.
 
