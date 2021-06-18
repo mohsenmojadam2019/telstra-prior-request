@@ -47,6 +47,8 @@ Taking Telstra notification API for example, when an end user/agent calls the no
 - config.prereq.ssl_verify: whether to check ssl. (Boolean)
 - config.prereq.url: the url of prior-call. (String, unencoded url)
 - config.prereq.cache_ttl: prior-call response cache TTL (seconds). cache is disabled when ttl is set no larger than 0.
+- config.prereq.cache_key: the key used for caching. 'req_headers', 'req_query'  and 'req_body' can be used in '{{KEY:VALUE}}'.
+- config.prereq.shared_mem: set the ngx.shared.dict. 'lua_shared_dict kong_api_cache  200m;' must be preconfigured in Kong at '/usr/local/share/lua/5.1/kong/templates/nginx_kong.lua'.
 - config.request.body: overwrite the body of service-call. (String)
 - config.request.headers: add headers to service-call. (Array of strings separated by ```,```)
 - config.upstream_path_append: append path to upstream uri. Varaibles are compatible in the appended path.
@@ -71,6 +73,8 @@ However the rules below apply:
 -  User input error precaution has not been developed yes in Lua code.
 
 ## Versions:
+- 2.4.1-1
+    - Add the ability to cache multiple ones.
 - 2.4.1-0
     - Add memory cache ability, using memory method. 
     - Errors of the inserted prior call are shown as response.

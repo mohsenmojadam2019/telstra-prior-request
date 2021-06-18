@@ -44,6 +44,8 @@ return {
             { url = typedefs.url },
             { http_method = {type = "string", default = "POST", custom_validator = check_method},},
             { body = {type = "string"},},
+            { cache_key = {type = "string", default = "default_api_cache"},},
+            { shared_mem = {type = "string", default = "kong_api_cache"},},
             { query = colon_strings_array,},
             { headers = colon_strings_array,},
             { ssl_verify = {type = "boolean", default = false},},

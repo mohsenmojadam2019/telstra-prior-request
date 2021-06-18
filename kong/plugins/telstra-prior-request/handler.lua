@@ -98,7 +98,8 @@ function PriorReqFunction:access(config)
       err_loc = err_loc or "access"
       err_code = err_code or 400
       ngx.log(ngx.ERR, "ERROR_EXIT, CODE: ", table_to_string(err_code), ", ERR_LOCATION: ", table_to_string(err_loc), ", ERROR: ", table_to_string(err), ". OTHERS, ", table_to_string(others))
-      return response.exit(err_code, content_type and err or "{\"msg\": \""..err.."\"}", {["Error_Location"] = err_loc, ["Kong-Plugin"]="telstra-prior-request", ["Content-Type"]=content_type or "application/json"})
+      if err == true then err=err_loc end
+      return response.exit(err_code, content_type and err or "{\"msg\": \""..table_to_string(err).."\"}", {["Error_Location"] = err_loc, ["Kong-Plugin"]="telstra-prior-request", ["Content-Type"]=content_type or "application/json"})
     end
   end
 
@@ -142,13 +143,18 @@ function PriorReqFunction:access(config)
       err_exit("the prior API calls itself", "pre_req_url_err", 400, "config_prereq_url: "..config.prereq.url.." ngx.var.host: "..ngx.var.host.." ngx.var.uri: "..ngx.var.uri)
     end
     ---- directly use ngx.shared.DICT for memory caching.
-    local db_cache, pre_res_cache, pre_res
+    local api_cache, pre_res_cache, pre_res
 
+    local cache_key = config.prereq.cache_key
+    cache_key = val(cache_key, data_json)
+    err_exit(cache_key:match("{{(.-)}}"), "cache_key_{{var}}_not_replaced_err", 400, "cache_key: "..cache_key)
+    ngx.log(ngx.ERR, "cache_key: "..cache_key) -- to remove
     if config.prereq.cache_ttl > 0 then
-      db_cache = ngx.shared["kong_db_cache"]
-      pre_res_cache = db_cache:get("PRIOR_CACHE") -- flags not care. Return nil if it does not exist or has expired.
+      api_cache = ngx.shared[config.prereq.shared_mem]
+      err_exit(not api_cache, "ngx.shared[config.prereq.shared_mem] not found", 400, "ngx.shared[\""..config.prereq.shared_mem.."\"]="..table_to_string(api_cache))
+      pre_res_cache = api_cache:get(cache_key) -- flags not care. Return nil if it does not exist or has expired.
     end
-    if db_cache and pre_res_cache then
+    if api_cache and pre_res_cache then
       local pre_res_cache_decoded, decode_err=cjson.decode(pre_res_cache)
       err_exit(decode_err, "pre_res_cache_decode_err", 400, "RAW_RESPONSE: "..table_to_string(pre_res_cache))
       pre_res=pre_res_cache_decoded
@@ -212,13 +218,14 @@ function PriorReqFunction:access(config)
         err_exit(pre_res.body or "response Header 'Content-Type' is missing or not 'application/json'", "pre_res_content_type_err", 400, "PRE_RES_STATUS: "..pre_res.status..", PRE_RES_HEADERS: "..table_to_string(pre_res.res_headers), pre_res.headers['Content-Type'])
       end
 
-      -- Write Cache. "db_cache" will be nil if config.prereq.cache_ttl<=0
-      if db_cache then
+      -- Write Cache. "api_cache" will be nil if config.prereq.cache_ttl<=0
+      if api_cache then
         local res_to_cache = {headers=pre_res.headers, body=pre_res.body, status=pre_res.status}
         local val_cache, encode_err = cjson.encode(res_to_cache)
         err_exit(encode_err, "pre_res_cache_encode_err", 400, "RES_TO_CACHE: "..table_to_string(res_to_cache))
         if val_cache then
-          local succ, set_err, _ = db_cache:set("PRIOR_CACHE", val_cache, config.prereq.cache_ttl)
+          local _ = api_cache:flush_expired()
+          local succ, set_err, _ = api_cache:set(cache_key, val_cache, config.prereq.cache_ttl)
           err_exit(set_err, "pre_cache_set_err", 400, "VAL_TO_CACHE: "..table_to_string(val_cache))
           err_exit(not succ, "pre_cache_set_res_err", 400, "VAL_TO_CACHE: "..table_to_string(val_cache))
         else
