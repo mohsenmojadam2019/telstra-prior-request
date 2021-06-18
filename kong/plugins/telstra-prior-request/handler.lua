@@ -148,7 +148,7 @@ function PriorReqFunction:access(config)
     local cache_key = config.prereq.cache_key
     cache_key = val(cache_key, data_json)
     err_exit(cache_key:match("{{(.-)}}"), "cache_key_{{var}}_not_replaced_err", 400, "cache_key: "..cache_key)
-    ngx.log(ngx.ERR, "cache_key: "..cache_key) -- to remove
+
     if config.prereq.cache_ttl > 0 then
       api_cache = ngx.shared[config.prereq.shared_mem]
       err_exit(not api_cache, "ngx.shared[config.prereq.shared_mem] not found", 400, "ngx.shared[\""..config.prereq.shared_mem.."\"]="..table_to_string(api_cache))
