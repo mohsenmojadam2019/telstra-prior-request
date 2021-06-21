@@ -73,6 +73,9 @@ However the rules below apply:
 -  User input error precaution has not been developed yes in Lua code.
 
 ## Versions:
+- 2.4.1-2
+    - {{key:value}} must be able to be replaced with values anywhere, now.
+    - cache_key and shared_mem must be correctly set when cache_ttl > 0.
 - 2.4.1-1
     - Add the ability to cache multiple ones.
 - 2.4.1-0
@@ -95,6 +98,10 @@ However the rules below apply:
 - 0.2.1: Add query related parameters.
 - 0.1.1: Achieve middle call.
 
+## Code Check
+- DOC:
+- Installation: ```luarocks install luacheck```
+- Example: ```luacheck --no-max-line-length handler.lua --ignore 432```
 ## Developement
 -  Install ZIP first. Otherwise luarock pack will fail without ZIP.
 - ```luarocks make <kong-plugin-telstra-prior-request-2.4.1-0.rockspec>``` will install from source using spec in the folder.

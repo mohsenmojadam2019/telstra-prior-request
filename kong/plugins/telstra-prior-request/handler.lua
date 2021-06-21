@@ -72,8 +72,18 @@ function PriorReqFunction:access(config)
     end, config_array, 0
   end
 
+  local function err_exit(err, err_loc, err_code, others, content_type)
+    if err then
+      err_loc = err_loc or "access"
+      err_code = err_code or 400
+      ngx.log(ngx.ERR, "ERROR_EXIT, CODE: ", table_to_string(err_code), ", ERR_LOCATION: ", table_to_string(err_loc), ", ERROR: ", table_to_string(err), ". OTHERS, ", table_to_string(others))
+      if err == true then err=err_loc end
+      return response.exit(err_code, content_type and err or "{\"msg\": \""..table_to_string(err).."\"}", {["Error_Location"] = err_loc, ["Kong-Plugin"]="telstra-prior-request", ["Content-Type"]=content_type or "application/json"})
+    end
+  end
+
   local function val(value_str, source_json, urlencode)
-    -- Replace {{value}} with the value from source_json.
+    -- Replace {{key:value}} with the value from source_json.
     if not source_json or not value_str then
       return value_str
     end
@@ -88,32 +98,24 @@ function PriorReqFunction:access(config)
         else
           val_return = val_return:gsub("{{"..item.."}}", source_json[key][value])
         end
+      else
+        err_exit("{{"..key..":"..value.."}} not found", "{{key:value}}_not_replaced_err", 400, "Origin: "..value_str..", Source: "..table_to_string(source_json))
       end
     end
     return val_return
   end
 
-  local function err_exit(err, err_loc, err_code, others, content_type)
-    if err then
-      err_loc = err_loc or "access"
-      err_code = err_code or 400
-      ngx.log(ngx.ERR, "ERROR_EXIT, CODE: ", table_to_string(err_code), ", ERR_LOCATION: ", table_to_string(err_loc), ", ERROR: ", table_to_string(err), ". OTHERS, ", table_to_string(others))
-      if err == true then err=err_loc end
-      return response.exit(err_code, content_type and err or "{\"msg\": \""..table_to_string(err).."\"}", {["Error_Location"] = err_loc, ["Kong-Plugin"]="telstra-prior-request", ["Content-Type"]=content_type or "application/json"})
-    end
-  end
-
   -- Grab Headers from Request
   local req_headers, err_h = ngx.req.get_headers()
   if err_h then
-    ngx.log(ngx.ERR, "Req Headers Read ERR: ", err_h)
+    err_exit(err_h, "req_headers_read_err", 400)
   else
     data_json.req_headers = req_headers
   end
   -- Grab Query from Rrequest
   local req_query, err_u = ngx.req.get_uri_args()
   if err_u then
-    ngx.log(ngx.ERR, "Req Query Parameter Read ERR: ", err_u)
+    err_exit(err_u, "req_query_param_read_err", 400)
   else
     data_json.req_query = req_query
   end
@@ -143,16 +145,13 @@ function PriorReqFunction:access(config)
       err_exit("the prior API calls itself", "pre_req_url_err", 400, "config_prereq_url: "..config.prereq.url.." ngx.var.host: "..ngx.var.host.." ngx.var.uri: "..ngx.var.uri)
     end
     ---- directly use ngx.shared.DICT for memory caching.
-    local api_cache, pre_res_cache, pre_res
-
-    local cache_key = config.prereq.cache_key
-    cache_key = val(cache_key, data_json)
-    err_exit(cache_key:match("{{(.-)}}"), "cache_key_{{var}}_not_replaced_err", 400, "cache_key: "..cache_key)
+    local api_cache, pre_res_cache, pre_res, cache_key
 
     if config.prereq.cache_ttl > 0 then
-      api_cache = ngx.shared[config.prereq.shared_mem]
-      err_exit(not api_cache, "ngx.shared[config.prereq.shared_mem] not found", 400, "ngx.shared[\""..config.prereq.shared_mem.."\"]="..table_to_string(api_cache))
-      pre_res_cache = api_cache:get(cache_key) -- flags not care. Return nil if it does not exist or has expired.
+      cache_key = val(config.prereq.cache_key, data_json) -- the key used for caching.
+      api_cache = ngx.shared[config.prereq.shared_mem]    -- get the ngx shared memory.
+      err_exit(not api_cache, "ngx.shared[config.prereq.shared_mem] not found", 400, "ngx.shared[\""..tostring(config.prereq.shared_mem).."\"]="..table_to_string(api_cache))
+      pre_res_cache = api_cache:get(cache_key)            -- flags not care. Return nil if it does not exist or has expired.
     end
     if api_cache and pre_res_cache then
       local pre_res_cache_decoded, decode_err=cjson.decode(pre_res_cache)
