@@ -99,7 +99,7 @@ However the rules below apply:
 - 0.1.1: Achieve middle call.
 
 ## Code Check
-- DOC:
+- DOC: https://github.com/mpeterv/luacheck
 - Installation: ```luarocks install luacheck```
 - Example: ```luacheck --no-max-line-length handler.lua --ignore 432```
 ## Developement
